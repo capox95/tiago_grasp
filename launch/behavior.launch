@@ -1,0 +1,3 @@
+<launch>
+  <node name="arm_behavior" pkg="arm_behavior" type="full_sequence" launch-prefix="gdb -ex run --args" output="screen" />
+</launch>

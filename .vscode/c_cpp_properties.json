@@ -1,0 +1,27 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/alessio/thesis_ws/devel/include/**",
+                "/opt/ros/kinetic/include/**",
+                "/home/alessio/thesis_ws/src/arm_control/include/**",
+                "/home/alessio/thesis_ws/src/behavior/include/**",
+                "/home/alessio/thesis_ws/src/grasp_point_detection/include/**",
+                "/home/alessio/thesis_ws/src/robot_kinematics/include/**",
+                "/home/alessio/thesis_ws/src/robotiq_85_gripper/robotiq_85_simulation/roboticsgroup_gazebo_plugins/include/**",
+                "/home/alessio/thesis_ws/src/universal_robot/ur_kinematics/include/**",
+                "/usr/include/**"
+            ],
+            "name": "ROS",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}
