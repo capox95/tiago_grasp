@@ -9,7 +9,7 @@ bool grasp_point_callback(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &source, float 
     BinSegmentation bin;
     bin.setInputCloud(source);
     bin.setNumberLines(4);
-    bin.setScaleFactorHullBorders(0.2);
+    bin.setPaddingDistance(0.05); // 5cm from the bin walls
     bin.setMaxBinHeight(0.3);
 
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_grasp(new pcl::PointCloud<pcl::PointXYZRGB>);
