@@ -17,11 +17,13 @@ bool grasp_point_callback(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &source, float 
         return false;
 
     pcl::ModelCoefficients::Ptr plane = bin.getPlaneGroundPoints();
+    pcl::PointCloud<pcl::PointXYZ>::Ptr top_vertices = bin.getVerticesBinContour();
 
     // ENTROPY FILTER -----------------------------------------------------------------------
     //
     EntropyFilter ef;
     ef.setInputCloud(cloud_grasp);
+    ef.setVerticesBinContour(top_vertices);
     ef.setDownsampleLeafSize(0.005);
     ef.setEntropyThreshold(0.3);
     ef.setKLocalSearch(500);        // Nearest Neighbour Local Search
