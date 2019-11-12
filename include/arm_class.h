@@ -51,8 +51,7 @@ private:
     collision_detection::AllowedCollisionMatrix acm_;
     moveit_msgs::ApplyPlanningScene srv_;
 
-    float dim_box_;
-
+    float dim_box_, offset_gripper_tip_;
 
 public:
     ArmControl() : nh_(),
@@ -80,19 +79,17 @@ public:
         planning_scene_diff_client_ = nh_.serviceClient<moveit_msgs::ApplyPlanningScene>("apply_planning_scene");
         planning_scene_diff_client_.waitForExistence();
 
-        dim_box_ = 0.1; //used to perform grasp action, should be related to the size of the gripper
-
-
+        dim_box_ = 0.1;             //used to perform grasp action, should be related to the size of the gripper
+        offset_gripper_tip_ = 0.22; //offset between arm_tool_link (ee of arm-torso group) and gripper tips
     }
 
-    
     // compute cartesian trajectory. Straight path along "z axis" for a distance of "value". Reference point is goal_pose;
-    double computeCartesianTrajectoryPostGrasp( geometry_msgs::Pose current, double value, moveit_msgs::RobotTrajectory &trajectory);
+    double computeCartesianTrajectoryPostGrasp(geometry_msgs::Pose current, double value, moveit_msgs::RobotTrajectory &trajectory);
 
     double computeCartesianTrajectoryFromStartState(std::vector<std::string> &joint_names,
-                                                  std::vector<double> &start_joints,
-                                                  geometry_msgs::Pose &pose,
-                                                  moveit_msgs::RobotTrajectory &trajectory);
+                                                    std::vector<double> &start_joints,
+                                                    geometry_msgs::Pose &pose,
+                                                    moveit_msgs::RobotTrajectory &trajectory);
 
     bool preGraspApproach(geometry_msgs::Pose goal, double approaching_distance);
 
@@ -101,12 +98,10 @@ public:
     // MOVE ARM TO GOAL POSE
     bool moveToPose(geometry_msgs::Pose goal);
 
-    void constructCollisionObject(moveit_msgs::CollisionObject &object, geometry_msgs::Pose &pose, 
-                                          moveit_msgs::AllowedCollisionMatrix &acm_msg);
+    void constructCollisionObject(moveit_msgs::CollisionObject &object, geometry_msgs::Pose &pose,
+                                  moveit_msgs::AllowedCollisionMatrix &acm_msg);
 
     void publishCollisionObject(moveit_msgs::CollisionObject &object, moveit_msgs::AllowedCollisionMatrix &acm_msg);
 
     void removeCollisionObject(moveit_msgs::CollisionObject &object, moveit_msgs::AllowedCollisionMatrix &acm_msg);
-
-
 };

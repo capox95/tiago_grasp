@@ -65,8 +65,8 @@ int main(int argc, char **argv)
     std::string target_frame = "base_footprint";
     std::string source_frame = "xtion_depth_optical_frame";
 
-    float offset_gripper_tf = 0.22; //0.19     //offset between tip of gripper fingers and ee-effector frame ("arm_tool_link") = 0.25 m
-    float distance = 0.3;           // distance travelled vertically (approach and departure)
+    float offset_gripper_tf = 0.4; //0.22     //offset between tip of gripper fingers and ee-effector frame ("arm_tool_link") = 0.25 m
+    float distance = 0.3;          // distance travelled vertically (approach and departure)
 
     float sleep = 0.1;
 

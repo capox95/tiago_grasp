@@ -646,28 +646,33 @@ void BinSegmentation::segmentOccludingEdges(pcl::PointCloud<pcl::PointXYZ>::Ptr 
     seg.setDistanceThreshold(0.03);
     seg.setMaxIterations(200);
 
-    int last_inliers_size = 1;
-    while (last_inliers_size > 0)
+    int iterNumber = 0;
+    while (iterNumber < 10)
     {
         seg.setInputCloud(filtered);
         seg.segment(*inliers, *coefficients);
 
-        // Extract the inliers
-        pcl::ExtractIndices<pcl::PointXYZ> extract;
-        extract.setInputCloud(filtered);
-        extract.setIndices(inliers);
-        extract.setNegative(true);
-        extract.filter(*filtered);
+        if (inliers->indices.size() != 0)
+        { // Extract the inliers
+            pcl::ExtractIndices<pcl::PointXYZ> extract;
+            extract.setInputCloud(filtered);
+            extract.setIndices(inliers);
+            extract.setNegative(true);
+            extract.filter(*filtered);
 
-        //std::cout << "inliers size: " << inliers->indices.size()
-        //          << "  cloud size: " << filtered->size() << std::endl;
+            //std::cout << "inliers size: " << inliers->indices.size()
+            //          << "  cloud size: " << filtered->size() << std::endl;
 
-        last_inliers_size = inliers->indices.size();
-
-        models.push_back(coefficients);
-        modelsInliers.push_back(inliers);
-        coefficients.reset(new pcl::ModelCoefficients);
-        inliers.reset(new pcl::PointIndices);
+            models.push_back(coefficients);
+            modelsInliers.push_back(inliers);
+            coefficients.reset(new pcl::ModelCoefficients);
+            inliers.reset(new pcl::PointIndices);
+        }
+        else
+        {
+            break;
+        }
+        iterNumber++;
     }
 
     std::cout << "number of found planes: " << models.size() << std::endl;
@@ -745,7 +750,6 @@ void BinSegmentation::computePlaneBottomBin(pcl::PointCloud<pcl::PointXYZ>::Ptr 
                 distance_max = distance;
         }
     }
-
     //check max bin height
     if (distance_max > max_bin_height)
         distance_max = max_bin_height;

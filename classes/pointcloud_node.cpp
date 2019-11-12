@@ -10,6 +10,7 @@ bool grasp_point_callback(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &source, float 
     bin.setInputCloud(source);
     bin.setNumberLines(4);
     bin.setScaleFactorHullBorders(0.2);
+    bin.setMaxBinHeight(0.3);
 
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_grasp(new pcl::PointCloud<pcl::PointXYZRGB>);
     bool bin_result = bin.compute(cloud_grasp);
@@ -28,7 +29,7 @@ bool grasp_point_callback(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &source, float 
     ef.setEntropyThreshold(0.3);
     ef.setKLocalSearch(500);        // Nearest Neighbour Local Search
     ef.setCurvatureThreshold(0.01); //Curvature Threshold for the computation of Entropy
-    ef.setDepthThreshold(0.03);
+    ef.setDepthThreshold(0.01);
     ef.setAngleThresholdForConvexity(5);
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_result(new pcl::PointCloud<pcl::PointXYZ>);

@@ -44,7 +44,6 @@ double ArmControl::computeCartesianTrajectoryFromStartState(std::vector<std::str
     moveit_msgs::CollisionObject object;
     moveit_msgs::AllowedCollisionMatrix acm_msg;
     constructCollisionObject(object, pose, acm_msg);
-    publishCollisionObject(object, acm_msg);
     // -----------------------------------------------------------------------------
 
     const double jump_threshold = 0.0;
@@ -56,7 +55,6 @@ double ArmControl::computeCartesianTrajectoryFromStartState(std::vector<std::str
     // -----------------------------------------------------------------------------
     // remove collision object
     removeCollisionObject(object, acm_msg);
-    publishCollisionObject(object, acm_msg);
     // -----------------------------------------------------------------------------
 
     return fraction;
@@ -181,7 +179,7 @@ void ArmControl::constructCollisionObject(moveit_msgs::CollisionObject &object, 
     geometry_msgs::Pose box_pose;
     box_pose.position.x = pose.position.x;
     box_pose.position.y = pose.position.y;
-    box_pose.position.z = pose.position.z;
+    box_pose.position.z = pose.position.z - offset_gripper_tip_;
     box_pose.orientation.w = 1.0;
 
     shape_msgs::SolidPrimitive primitive;
@@ -200,6 +198,9 @@ void ArmControl::constructCollisionObject(moveit_msgs::CollisionObject &object, 
 
     // obtain acm matrix as moveit message for service
     acm_.getMessage(acm_msg);
+
+    // publish object to planning scene
+    publishCollisionObject(object, acm_msg);
 }
 
 void ArmControl::publishCollisionObject(moveit_msgs::CollisionObject &object, moveit_msgs::AllowedCollisionMatrix &acm_msg)
@@ -224,4 +225,6 @@ void ArmControl::removeCollisionObject(moveit_msgs::CollisionObject &object, mov
 
     // obtain acm matrix as moveit message for service
     acm_.getMessage(acm_msg);
+
+    publishCollisionObject(object, acm_msg);
 }
