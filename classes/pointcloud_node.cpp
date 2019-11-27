@@ -2,14 +2,14 @@
 #include <chrono>
 #include <ctime>
 
-bool grasp_point_callback(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &source, float &depth, Eigen::Affine3d &transformation)
+bool grasp_point_callback(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &source, Eigen::Affine3d &transformation)
 {
 
     //BIN SEGMENTATION -----------------------------------------------------------------------
     BinSegmentation bin;
     bin.setInputCloud(source);
     bin.setNumberLines(4);
-    bin.setPaddingDistance(0.05); // 5cm from the bin walls
+    bin.setPaddingDistance(0.12); // 5cm from the bin walls
     bin.setMaxBinHeight(0.3);
 
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_grasp(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -26,10 +26,10 @@ bool grasp_point_callback(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &source, float 
     ef.setInputCloud(cloud_grasp);
     ef.setVerticesBinContour(top_vertices);
     ef.setDownsampleLeafSize(0.005);
-    ef.setEntropyThreshold(0.3);
+    ef.setEntropyThreshold(0.65);
     ef.setKLocalSearch(500);        // Nearest Neighbour Local Search
     ef.setCurvatureThreshold(0.01); //Curvature Threshold for the computation of Entropy
-    ef.setDepthThreshold(0.01);
+    ef.setDepthThreshold(0.03);
     ef.setAngleThresholdForConvexity(5);
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_result(new pcl::PointCloud<pcl::PointXYZ>);
@@ -40,7 +40,7 @@ bool grasp_point_callback(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &source, float 
         return false;
     }
 
-    depth = ef.getDepthValue();
+    //depth = ef.getDepthValue();
 
     // GRASP POINT --------------------------------------------------------------------------
     PointPose pp;
@@ -72,8 +72,7 @@ NodeStatus PointCloudPose::tick()
     pcl::fromPCLPointCloud2(pcl_pc2, *cloud);
 
     Eigen::Affine3d transformation;
-    float depth;
-    if (grasp_point_callback(cloud, depth, transformation) == false)
+    if (grasp_point_callback(cloud, transformation) == false)
     {
         ROS_WARN("ERROR GRASP POINT CALLBACK!");
         return NodeStatus::FAILURE;
@@ -88,9 +87,6 @@ NodeStatus PointCloudPose::tick()
     ROS_WARN("Position: %f, %f, %f", pose_msg.position.x, pose_msg.position.y, pose_msg.position.z);
     ROS_WARN("Orientation: %f, %f, %f, %f",
              pose_msg.orientation.x, pose_msg.orientation.y, pose_msg.orientation.z, pose_msg.orientation.w);
-
-    setOutput<float>("depth_msg", depth);
-    ROS_WARN("Depth: %f", depth);
 
     return NodeStatus::SUCCESS;
 }

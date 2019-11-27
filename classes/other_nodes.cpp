@@ -104,6 +104,5 @@ NodeStatus BroadcastFrame::tick()
     static_broadcaster.sendTransform(broadcast);
     ROS_INFO("TF Broadcasted!");
 
-
     return NodeStatus::SUCCESS;
 }

@@ -6,6 +6,15 @@ double ArmControl::computeCartesianTrajectoryPostGrasp(geometry_msgs::Pose curre
     robot_state::RobotStatePtr start_state = move_group_->getCurrentState();
     move_group_->setStartState(*start_state);
 
+    /*
+    // -------------------------------------------------------------------------------
+    // create collision object and publish it
+    moveit_msgs::CollisionObject object;
+    moveit_msgs::AllowedCollisionMatrix acm_msg;
+    constructCollisionObject(object, current, acm_msg);
+    // -----------------------------------------------------------------------------
+    */
+
     std::vector<geometry_msgs::Pose> waypoints;
     current.position.z += value;
     waypoints.push_back(current);
@@ -15,9 +24,16 @@ double ArmControl::computeCartesianTrajectoryPostGrasp(geometry_msgs::Pose curre
 
     const double jump_threshold = 0.0;
     const double eef_step = 0.01;
-    double fraction = move_group_->computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
+    double fraction = move_group_->computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory, false);
     if (fraction < 1.0)
         ROS_INFO("fraction < 1.0; value: %f", fraction);
+
+    /*
+    // -----------------------------------------------------------------------------
+    // remove collision object
+    removeCollisionObject(object, acm_msg);
+    // -----------------------------------------------------------------------------
+    */
 
     return fraction;
 }
@@ -39,23 +55,11 @@ double ArmControl::computeCartesianTrajectoryFromStartState(std::vector<std::str
     //move_group_->setMaxVelocityScalingFactor(0.05);
     //move_group_->setMaxAccelerationScalingFactor(0.05);
 
-    // -------------------------------------------------------------------------------
-    // create collision object and publish it
-    moveit_msgs::CollisionObject object;
-    moveit_msgs::AllowedCollisionMatrix acm_msg;
-    constructCollisionObject(object, pose, acm_msg);
-    // -----------------------------------------------------------------------------
-
     const double jump_threshold = 0.0;
     const double eef_step = 0.01;
-    double fraction = move_group_->computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
+    double fraction = move_group_->computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory, false);
     if (fraction < 1.0)
         ROS_INFO("fraction < 1.0; value: %f", fraction);
-
-    // -----------------------------------------------------------------------------
-    // remove collision object
-    removeCollisionObject(object, acm_msg);
-    // -----------------------------------------------------------------------------
 
     return fraction;
 }
@@ -84,6 +88,15 @@ bool ArmControl::preGraspApproach(geometry_msgs::Pose goal, double approaching_d
     std::vector<double> joint_values = jtp.positions;
     std::vector<std::string> joint_names = approach.trajectory_.joint_trajectory.joint_names;
 
+    /*
+    // -------------------------------------------------------------------------------
+    // create collision object and publish it
+    moveit_msgs::CollisionObject object;
+    moveit_msgs::AllowedCollisionMatrix acm_msg;
+    constructCollisionObject(object, goal, acm_msg);
+    // -----------------------------------------------------------------------------
+    */
+
     moveit_msgs::RobotTrajectory trajectory;
     double fraction = computeCartesianTrajectoryFromStartState(joint_names, joint_values, goal, trajectory);
     if (trajectory.joint_trajectory.points.size() <= 1 || fraction < 1.0)
@@ -102,6 +115,13 @@ bool ArmControl::preGraspApproach(geometry_msgs::Pose goal, double approaching_d
         return false;
 
     current_pose_ = goal;
+
+    /*
+    // -----------------------------------------------------------------------------
+    // remove collision object
+    removeCollisionObject(object, acm_msg);
+    // -----------------------------------------------------------------------------
+    */
 
     return true;
 }
@@ -185,9 +205,9 @@ void ArmControl::constructCollisionObject(moveit_msgs::CollisionObject &object, 
     shape_msgs::SolidPrimitive primitive;
     primitive.type = primitive.BOX;
     primitive.dimensions.resize(3);
-    primitive.dimensions[0] = dim_box_;
-    primitive.dimensions[1] = dim_box_;
-    primitive.dimensions[2] = dim_box_;
+    primitive.dimensions[0] = dim_box_ * 2;
+    primitive.dimensions[1] = dim_box_ * 2;
+    primitive.dimensions[2] = dim_box_ * 2;
 
     object.primitives.push_back(primitive);
     object.primitive_poses.push_back(box_pose);

@@ -1,0 +1,16 @@
+ <root >
+     <BehaviorTree>
+        <Fallback>
+            <Sequence>
+                <OpenGripper />
+                <PointCloudPose pose_out_msg="{pose_camera_frame}" depth_msg="{depth_value}" />
+                <TransformFrames pose_in_msg="{pose_camera_frame}" pose_out_msg="{pose_world_frame}" />
+                <MoveArmPreGrasp target="{pose_world_frame}" />
+                <CloseGripper />
+                <MoveArmPostGrasp />
+            </Sequence>
+            <SleepNode/>
+        </Fallback>
+     </BehaviorTree>
+ </root>
+ )";

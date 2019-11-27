@@ -18,17 +18,14 @@ using namespace BT;
 static const char *xml_text = R"(
  <root >
      <BehaviorTree>
-        <Fallback>
             <Sequence>
                 <OpenGripper />
-                <PointCloudPose pose_out_msg="{pose_camera_frame}" depth_msg="{depth_value}" />
+                <PointCloudPose pose_out_msg="{pose_camera_frame}" />
                 <TransformFrames pose_in_msg="{pose_camera_frame}" pose_out_msg="{pose_world_frame}" />
                 <MoveArmPreGrasp target="{pose_world_frame}" />
                 <CloseGripper />
                 <MoveArmPostGrasp />
             </Sequence>
-            <SleepNode/>
-        </Fallback>
      </BehaviorTree>
  </root>
  )";
@@ -63,10 +60,10 @@ int main(int argc, char **argv)
 
     std::string topic_pc = "/xtion/depth_registered/points";
     std::string target_frame = "base_footprint";
-    std::string source_frame = "xtion_depth_optical_frame";
+    std::string source_frame = "xtion_rgb_optical_frame";
 
-    float offset_gripper_tf = 0.4; //0.22     //offset between tip of gripper fingers and ee-effector frame ("arm_tool_link") = 0.25 m
-    float distance = 0.3;          // distance travelled vertically (approach and departure)
+    float offset_gripper_tf = 0.19; //offset between tip of gripper fingers and ee-effector frame ("arm_tool_link") = 0.22 m
+    float distance = 0.3;           // distance travelled vertically (approach and departure)
 
     float sleep = 0.1;
 
@@ -79,7 +76,7 @@ int main(int argc, char **argv)
         }
         if (auto actionPostGrasp = dynamic_cast<MoveArmPostGrasp *>(node.get()))
         {
-            actionPostGrasp->init(ptr_arm, distance);
+            actionPostGrasp->init(ptr_arm, distance + 0.15);
         }
 
         // pointcloud and tfs

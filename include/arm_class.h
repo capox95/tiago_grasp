@@ -51,12 +51,15 @@ private:
     collision_detection::AllowedCollisionMatrix acm_;
     moveit_msgs::ApplyPlanningScene srv_;
 
+    //moveit_msgs::CollisionObject object_;
+    //moveit_msgs::AllowedCollisionMatrix acm_msg_;
+
     float dim_box_, offset_gripper_tip_;
 
 public:
     ArmControl() : nh_(),
                    planning_group_name_("arm_torso"),
-                   POS_TOLARENCE(0.03),
+                   POS_TOLARENCE(0.04),
                    ANG_TOLARENCE(0.1),
                    PLANING_TIME(20.0),
                    plugin_name_("kdl_kinematics_plugin/KDLKinematicsPlugin"),

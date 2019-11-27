@@ -32,7 +32,7 @@ public:
 
     static PortsList providedPorts()
     {
-        return {OutputPort<geometry_msgs::Pose>("pose_out_msg"), OutputPort<float>("depth_msg")};
+        return {OutputPort<geometry_msgs::Pose>("pose_out_msg")};
     }
 
     NodeStatus tick() override;
