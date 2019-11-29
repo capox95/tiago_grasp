@@ -43,7 +43,6 @@ public:
         _arm_node = ptr_arm;
         _offset = value_offset;
         _approaching_distance = distance;
-
     }
 
     NodeStatus tick() override;
@@ -65,6 +64,54 @@ class MoveArmPostGrasp : public SyncActionNode
 public:
     // additional arguments passed to the constructor
     MoveArmPostGrasp(const std::string &name) : SyncActionNode(name, {}) {}
+
+    void init(std::shared_ptr<ArmControl> ptr_arm, float distance)
+    {
+        _arm_node = ptr_arm;
+        _distance = distance;
+    }
+
+    NodeStatus tick() override;
+
+private:
+    std::shared_ptr<ArmControl> _arm_node;
+    float _distance;
+};
+
+// ------------------------------------------------------------------------------------------------//
+// --------------------------CLOTHES OUTSIDE ------------------------------------------------------//
+// ------------------------------------------------------------------------------------------------//
+class MoveArmPreRecovery : public SyncActionNode
+{
+public:
+    // additional arguments passed to the constructor
+    MoveArmPreRecovery(const std::string &name, const NodeConfiguration &config) : SyncActionNode(name, config) {}
+
+    void init(std::shared_ptr<ArmControl> ptr_arm, float value_offset, float distance)
+    {
+        _arm_node = ptr_arm;
+        _distance = distance;
+        _offset = value_offset;
+    }
+
+    NodeStatus tick() override;
+
+    static PortsList providedPorts()
+    {
+        const char *description = "goal pose";
+        return {InputPort<geometry_msgs::Pose>("target", description)};
+    }
+
+private:
+    std::shared_ptr<ArmControl> _arm_node;
+    float _offset, _distance;
+};
+
+class MoveArmPostRecovery : public SyncActionNode
+{
+public:
+    // additional arguments passed to the constructor
+    MoveArmPostRecovery(const std::string &name) : SyncActionNode(name, {}) {}
 
     void init(std::shared_ptr<ArmControl> ptr_arm, float distance)
     {

@@ -76,7 +76,8 @@ target_link_libraries(gripper_sequence ${catkin_LIBRARIES})
 add_executable(full_sequence src/full_sequence.cpp 
               classes/arm_nodes.cpp 
               classes/arm_class.cpp
-              classes/entropy.cpp classes/binsegmentation.cpp classes/pointpose.cpp 
+              classes/entropy.cpp classes/binsegmentation.cpp classes/pointpose.cpp
+              classes/findTarget.cpp classes/alignProcessing.cpp 
               classes/other_nodes.cpp 
               classes/pointcloud_node.cpp
               classes/gripper_nodes.cpp 
@@ -87,10 +88,26 @@ target_link_libraries (full_sequence ${PCL_LIBRARIES})
 target_link_libraries(full_sequence ${Boost_LIBRARIES})
 
 add_executable(cloud_sequence src/cloud_sequence.cpp 
-              classes/entropy.cpp classes/binsegmentation.cpp classes/pointpose.cpp 
+              classes/entropy.cpp classes/binsegmentation.cpp classes/pointpose.cpp
+              classes/findTarget.cpp classes/alignProcessing.cpp 
               classes/other_nodes.cpp 
               classes/pointcloud_node.cpp
 )
 target_link_libraries(cloud_sequence ${catkin_LIBRARIES})
 target_link_libraries (cloud_sequence ${PCL_LIBRARIES})
 target_link_libraries(cloud_sequence ${Boost_LIBRARIES})
+
+
+add_executable(clothes_recovery_sequence src/clothes_recovery_sequence.cpp 
+              classes/entropy.cpp classes/binsegmentation.cpp classes/pointpose.cpp 
+              classes/findTarget.cpp classes/alignProcessing.cpp
+              classes/other_nodes.cpp 
+              classes/pointcloud_node.cpp
+              classes/arm_nodes.cpp 
+              classes/arm_class.cpp
+              classes/gripper_nodes.cpp 
+              classes/gripper_class.cpp 
+)
+target_link_libraries(clothes_recovery_sequence ${catkin_LIBRARIES})
+target_link_libraries (clothes_recovery_sequence ${PCL_LIBRARIES})
+target_link_libraries(clothes_recovery_sequence ${Boost_LIBRARIES})

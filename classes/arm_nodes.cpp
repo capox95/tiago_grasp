@@ -92,7 +92,7 @@ NodeStatus MoveArmPreGrasp::tick()
     }
     geometry_msgs::Pose pose = res.value();
 
-    pose.position.z += _offset; 
+    pose.position.z += _offset;
 
     bool success = _arm_node->preGraspApproach(pose, _approaching_distance);
     if (!success)
@@ -114,6 +114,44 @@ NodeStatus MoveArmPostGrasp::tick()
     goal.orientation.w = 0.9459;
 
     bool success = _arm_node->postGraspApproach(goal, _distance);
+    if (!success)
+        return NodeStatus::FAILURE;
+
+    return NodeStatus::SUCCESS;
+}
+
+NodeStatus MoveArmPreRecovery::tick()
+{
+
+    auto res = getInput<geometry_msgs::Pose>("target");
+    if (!res)
+    {
+        throw RuntimeError("error reading port [target]:", res.error());
+    }
+    geometry_msgs::Pose pose = res.value();
+
+    pose.position.x -= _offset;
+
+    bool success = _arm_node->preRecoveryApproach(pose, _distance);
+    if (!success)
+        return NodeStatus::FAILURE;
+
+    return NodeStatus::SUCCESS;
+}
+
+NodeStatus MoveArmPostRecovery::tick()
+{
+    geometry_msgs::Pose goal;
+    goal.position.x = 0.59;
+    goal.position.y = 0.05;
+    goal.position.z = 0.5;
+
+    goal.orientation.x = -0.660510;
+    goal.orientation.y = -0.033602;
+    goal.orientation.z = 0.019429;
+    goal.orientation.w = 0.749814;
+
+    bool success = _arm_node->postRecoveryApproach(goal, _distance);
     if (!success)
         return NodeStatus::FAILURE;
 

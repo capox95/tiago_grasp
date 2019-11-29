@@ -98,6 +98,10 @@ public:
 
     bool postGraspApproach(geometry_msgs::Pose goal, double departure_distance);
 
+    bool preRecoveryApproach(geometry_msgs::Pose goal, double cartesian_distance);
+
+    bool postRecoveryApproach(geometry_msgs::Pose goal, double cartesian_distance);
+
     // MOVE ARM TO GOAL POSE
     bool moveToPose(geometry_msgs::Pose goal);
 

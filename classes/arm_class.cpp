@@ -248,3 +248,95 @@ void ArmControl::removeCollisionObject(moveit_msgs::CollisionObject &object, mov
 
     publishCollisionObject(object, acm_msg);
 }
+
+// ------------------------------------------------
+// CLOTHES RECOVERY -------------------------------
+// ------------------------------------------------
+
+bool ArmControl::preRecoveryApproach(geometry_msgs::Pose goal, double cartesian_distance)
+{
+
+    ROS_WARN("GOAL: %f, %f, %f", goal.position.x, goal.position.y, goal.position.z);
+
+    moveit::planning_interface::MoveGroupInterface::Plan approach, cartesian;
+
+    move_group_->setMaxVelocityScalingFactor(1.0);
+    move_group_->setMaxAccelerationScalingFactor(1.0);
+
+    robot_state::RobotStatePtr start_state = move_group_->getCurrentState();
+    move_group_->setStartState(*start_state);
+
+    geometry_msgs::Pose approach_goal = goal;
+    approach_goal.position.x -= cartesian_distance;
+    move_group_->setPoseTarget(approach_goal);
+
+    bool approach_plan = move_group_->plan(approach) == moveit::planning_interface::MoveItErrorCode::SUCCESS;
+    if (!approach_plan)
+        return false;
+
+    std::size_t traj_size = approach.trajectory_.joint_trajectory.points.size();
+    trajectory_msgs::JointTrajectoryPoint jtp = approach.trajectory_.joint_trajectory.points.at(traj_size - 1);
+    std::vector<double> joint_values = jtp.positions;
+    std::vector<std::string> joint_names = approach.trajectory_.joint_trajectory.joint_names;
+
+    // -----------------------------------------------------------------------------
+
+    moveit_msgs::RobotTrajectory trajectory;
+    double fraction = computeCartesianTrajectoryFromStartState(joint_names, joint_values, goal, trajectory);
+    if (trajectory.joint_trajectory.points.size() <= 1 || fraction < 1.0)
+        return false;
+    else
+        cartesian.trajectory_ = trajectory;
+
+    // ------------------------------------------ EXECUTION --------------------------------------------
+
+    bool success_approach = move_group_->execute(approach) == moveit::planning_interface::MoveItErrorCode::SUCCESS;
+    if (!success_approach)
+        return false;
+
+    bool success_cartesian = move_group_->execute(cartesian) == moveit::planning_interface::MoveItErrorCode::SUCCESS;
+    if (!success_cartesian)
+        return false;
+
+    current_pose_ = goal;
+
+    return true;
+}
+
+bool ArmControl::postRecoveryApproach(geometry_msgs::Pose goal, double cartesian_distance)
+{
+    moveit::planning_interface::MoveGroupInterface::Plan cartesian;
+
+    geometry_msgs::Pose current = current_pose_;
+
+    geometry_msgs::Pose goal2 = goal;
+
+    moveit_msgs::RobotTrajectory trajectory;
+    robot_state::RobotStatePtr start_state = move_group_->getCurrentState();
+    move_group_->setStartState(*start_state);
+
+    std::vector<geometry_msgs::Pose> waypoints;
+    waypoints.push_back(goal);
+
+    goal2.position.x += 0.1;
+    waypoints.push_back(goal2);
+
+    const double jump_threshold = 0.0;
+    const double eef_step = 0.01;
+    double fraction = move_group_->computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory, false);
+    if (fraction < 1.0)
+    {
+        ROS_INFO("fraction < 1.0; value: %f", fraction);
+        return false;
+    }
+
+    cartesian.trajectory_ = trajectory;
+
+    // executions --------------------------------------------------------------------------------------------------
+
+    bool success_cartesian = move_group_->execute(cartesian) == moveit::planning_interface::MoveItErrorCode::SUCCESS;
+    if (!success_cartesian)
+        return false;
+
+    return true;
+}

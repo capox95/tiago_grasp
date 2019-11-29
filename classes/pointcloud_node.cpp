@@ -90,3 +90,101 @@ NodeStatus PointCloudPose::tick()
 
     return NodeStatus::SUCCESS;
 }
+
+// --------------------------------------------------------------------------------------------------------
+
+bool clothes_outside_callback(pcl::PointCloud<pcl::PointNormal>::Ptr &object,
+                              pcl::PointCloud<pcl::PointNormal>::Ptr &scene,
+                              Eigen::Affine3d &transformation)
+{
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_seg(new pcl::PointCloud<pcl::PointXYZRGB>);
+
+    FindTarget ft;
+    ft.object = object;
+    ft.scene = scene;
+    ft.apply_icp = false;
+    bool alignment = ft.compute();
+    if (alignment == false)
+        return false;
+
+    pcl::console::print_highlight("Starting processing to create difference map!\n");
+    Processing proc;
+    proc.setSceneCloud(scene);
+    proc.setObjectCloud(ft.object_icp);
+    proc.compute(cloud_seg);
+
+    pcl::ModelCoefficients::Ptr plane_proc = proc.getPlaneUsed();
+
+    pcl::console::print_highlight("Starting entropy...\n");
+    // Entropy Filter
+    EntropyFilter ef;
+    ef.setInputCloud(cloud_seg);
+    ef.setDownsampleLeafSize(0.005);     // size of the leaf for downsampling the cloud, value in meters. Default = 5 mm
+    ef.setEntropyThreshold(0.7);         // Segmentation performed for all points with normalized entropy value above this
+    ef.setKLocalSearch(500);             // Nearest Neighbour Local Search
+    ef.setCurvatureThreshold(0.01);      // Curvature Threshold for the computation of Entropy
+    ef.setDepthThreshold(0.03);          // if the segment region has a value of depth lower than this -> not graspable (value in meters)
+    ef.setAngleThresholdForConvexity(5); // convexity check performed if the angle btw two normal vectors is larger than this
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_result(new pcl::PointCloud<pcl::PointXYZ>);
+    bool entropy_result = ef.compute(cloud_result);
+    if (entropy_result == false)
+    {
+        PCL_WARN("fail at entropy stage\n");
+        return false;
+    }
+    //
+    // GRASP POINT --------------------------------------------------------------------------
+    PointPose pp;
+    //pp.setSceneCloud(scene);
+    pp.setSourceCloud(cloud_seg);
+    pp.setRefPlane(plane_proc);
+    pp.setInputCloud(cloud_result);
+
+    if (pp.computeGraspPoint(transformation))
+        return true;
+    else
+        return false;
+}
+
+NodeStatus ClothesOutsidePose::tick()
+{
+
+    sensor_msgs::PointCloud2ConstPtr sharedMsg;
+    sensor_msgs::PointCloud2 msg;
+    sharedMsg = ros::topic::waitForMessage<sensor_msgs::PointCloud2>(_topic, _node);
+    if (sharedMsg != NULL)
+        msg = *sharedMsg;
+
+    pcl::PCLPointCloud2 pcl_pc2;
+    pcl_conversions::toPCL(*sharedMsg, pcl_pc2);
+    pcl::PointCloud<pcl::PointNormal>::Ptr scene(new pcl::PointCloud<pcl::PointNormal>);
+    pcl::fromPCLPointCloud2(pcl_pc2, *scene);
+
+    // loading object model
+    pcl::PointCloud<pcl::PointNormal>::Ptr object(new pcl::PointCloud<pcl::PointNormal>);
+    if (pcl::io::loadPCDFile<pcl::PointNormal>("model_today.pcd", *object) < 0)
+    {
+        pcl::console::print_error("Error loading object/scene file!\n");
+        return NodeStatus::FAILURE;
+    }
+
+    Eigen::Affine3d transformation;
+    if (clothes_outside_callback(object, scene, transformation) == false)
+    {
+        ROS_WARN("ERROR GRASP POINT CALLBACK!");
+        return NodeStatus::FAILURE;
+    }
+
+    geometry_msgs::Pose pose_msg;
+    tf::poseEigenToMsg(transformation, pose_msg);
+
+    setOutput<geometry_msgs::Pose>("pose_out_msg", pose_msg);
+
+    ROS_INFO("PointCloudPose Node:");
+    ROS_WARN("Position: %f, %f, %f", pose_msg.position.x, pose_msg.position.y, pose_msg.position.z);
+    ROS_WARN("Orientation: %f, %f, %f, %f",
+             pose_msg.orientation.x, pose_msg.orientation.y, pose_msg.orientation.z, pose_msg.orientation.w);
+
+    return NodeStatus::SUCCESS;
+}

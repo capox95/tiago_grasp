@@ -12,6 +12,8 @@
 #include "../include/entropy.h"
 #include "../include/binsegmentation.h"
 #include "../include/pointpose.h"
+#include "../include/alignProcessing.h"
+#include "../include/findTarget.h"
 
 #include <behaviortree_cpp/behavior_tree.h>
 
@@ -21,6 +23,31 @@ class PointCloudPose : public SyncActionNode
 {
 public:
     PointCloudPose(const std::string &name, const NodeConfiguration &config) : SyncActionNode(name, config)
+    {
+    }
+
+    void init(ros::NodeHandle &node, std::string &topic)
+    {
+        _node = node;
+        _topic = topic;
+    }
+
+    static PortsList providedPorts()
+    {
+        return {OutputPort<geometry_msgs::Pose>("pose_out_msg")};
+    }
+
+    NodeStatus tick() override;
+
+private:
+    ros::NodeHandle _node;
+    std::string _topic;
+};
+
+class ClothesOutsidePose : public SyncActionNode
+{
+public:
+    ClothesOutsidePose(const std::string &name, const NodeConfiguration &config) : SyncActionNode(name, config)
     {
     }
 
