@@ -9,10 +9,10 @@
 #include <pcl/point_types.h>
 #include <eigen_conversions/eigen_msg.h>
 
-#include "../include/entropy.h"
+#include "../include/entropyOut.h"
 #include "../include/binsegmentation.h"
-#include "../include/pointpose.h"
-#include "../include/alignProcessing.h"
+#include "../include/pointposeOut.h"
+#include "../include/alignTarget.h"
 #include "../include/findTarget.h"
 
 #include <behaviortree_cpp/behavior_tree.h>
@@ -34,7 +34,7 @@ public:
 
     static PortsList providedPorts()
     {
-        return {OutputPort<geometry_msgs::Pose>("pose_out_msg")};
+        return {OutputPort<geometry_msgs::Pose>("pose_out_msg"), OutputPort<float>("margin_out_msg")};
     }
 
     NodeStatus tick() override;
@@ -59,7 +59,7 @@ public:
 
     static PortsList providedPorts()
     {
-        return {OutputPort<geometry_msgs::Pose>("pose_out_msg")};
+        return {OutputPort<geometry_msgs::Pose>("pose_out_msg"), OutputPort<float>("margin_out_msg")};
     }
 
     NodeStatus tick() override;

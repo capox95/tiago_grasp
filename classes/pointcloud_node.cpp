@@ -2,7 +2,7 @@
 #include <chrono>
 #include <ctime>
 
-bool grasp_point_callback(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &source, Eigen::Affine3d &transformation)
+bool grasp_point_callback(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &source, Eigen::Affine3d &transformation, float &margin)
 {
 
     //BIN SEGMENTATION -----------------------------------------------------------------------
@@ -31,30 +31,36 @@ bool grasp_point_callback(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &source, Eigen:
     ef.setCurvatureThreshold(0.01); //Curvature Threshold for the computation of Entropy
     ef.setDepthThreshold(0.03);
     ef.setAngleThresholdForConvexity(5);
+    ef.useWeightedEntropy(true);
+    ef.optimizeNumberOfClouds(true);
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_result(new pcl::PointCloud<pcl::PointXYZ>);
-    bool entropy_result = ef.compute(cloud_result);
+    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> clouds_result;
+    bool entropy_result = ef.compute(clouds_result);
     if (entropy_result == false)
     {
         PCL_WARN("fail at entropy stage\n");
         return false;
     }
 
-    //depth = ef.getDepthValue();
+    pcl::ModelCoefficients::Ptr plane_ef = ef.getReferencePlane();
 
     // GRASP POINT --------------------------------------------------------------------------
     PointPose pp;
     pp.setSourceCloud(source);
-    pp.setRefPlane(plane);
-    pp.setInputCloud(cloud_result);
+    pp.setInputVectorClouds(clouds_result);
+    pp.setRefPlane(plane_ef);
 
-    if (pp.computeGraspPoint(transformation))
-    {
-        //std::cout << transformation.matrix() << std::endl;
-        return true;
-    }
-    else
-        return false;
+    std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d>> transformation_vector;
+    std::vector<float> margin_values;
+    int number = pp.compute(transformation_vector, margin_values);
+
+    //
+    //
+    //
+    transformation = transformation_vector[0];
+    margin = margin_values[0];
+
+    return true;
 }
 
 NodeStatus PointCloudPose::tick()
@@ -72,7 +78,8 @@ NodeStatus PointCloudPose::tick()
     pcl::fromPCLPointCloud2(pcl_pc2, *cloud);
 
     Eigen::Affine3d transformation;
-    if (grasp_point_callback(cloud, transformation) == false)
+    float margin;
+    if (grasp_point_callback(cloud, transformation, margin) == false)
     {
         ROS_WARN("ERROR GRASP POINT CALLBACK!");
         return NodeStatus::FAILURE;
@@ -83,10 +90,14 @@ NodeStatus PointCloudPose::tick()
 
     setOutput<geometry_msgs::Pose>("pose_out_msg", pose_msg);
 
+    setOutput<float>("margin_out_msg", margin);
+
     ROS_INFO("PointCloudPose Node:");
     ROS_WARN("Position: %f, %f, %f", pose_msg.position.x, pose_msg.position.y, pose_msg.position.z);
     ROS_WARN("Orientation: %f, %f, %f, %f",
              pose_msg.orientation.x, pose_msg.orientation.y, pose_msg.orientation.z, pose_msg.orientation.w);
+
+    ROS_WARN("Margin available: %f", margin);
 
     return NodeStatus::SUCCESS;
 }
@@ -95,7 +106,7 @@ NodeStatus PointCloudPose::tick()
 
 bool clothes_outside_callback(pcl::PointCloud<pcl::PointNormal>::Ptr &object,
                               pcl::PointCloud<pcl::PointNormal>::Ptr &scene,
-                              Eigen::Affine3d &transformation)
+                              Eigen::Affine3d &transformation, float &margin)
 {
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_seg(new pcl::PointCloud<pcl::PointXYZRGB>);
 
@@ -125,26 +136,34 @@ bool clothes_outside_callback(pcl::PointCloud<pcl::PointNormal>::Ptr &object,
     ef.setCurvatureThreshold(0.01);      // Curvature Threshold for the computation of Entropy
     ef.setDepthThreshold(0.03);          // if the segment region has a value of depth lower than this -> not graspable (value in meters)
     ef.setAngleThresholdForConvexity(5); // convexity check performed if the angle btw two normal vectors is larger than this
+    ef.setReferencePlane(plane_proc);
+    ef.useWeightedEntropy(true);
+    ef.optimizeNumberOfClouds(true);
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_result(new pcl::PointCloud<pcl::PointXYZ>);
-    bool entropy_result = ef.compute(cloud_result);
+    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> clouds_result;
+    bool entropy_result = ef.compute(clouds_result);
     if (entropy_result == false)
     {
         PCL_WARN("fail at entropy stage\n");
         return false;
     }
     //
+    pcl::ModelCoefficients::Ptr plane_ef = ef.getReferencePlane();
+
     // GRASP POINT --------------------------------------------------------------------------
     PointPose pp;
-    //pp.setSceneCloud(scene);
     pp.setSourceCloud(cloud_seg);
-    pp.setRefPlane(plane_proc);
-    pp.setInputCloud(cloud_result);
+    pp.setInputVectorClouds(clouds_result);
+    pp.setRefPlane(plane_ef);
 
-    if (pp.computeGraspPoint(transformation))
-        return true;
-    else
-        return false;
+    std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d>> transformation_vector;
+    std::vector<float> margin_values;
+    int number = pp.compute(transformation_vector, margin_values);
+
+    transformation = transformation_vector[0];
+    margin = margin_values[0];
+
+    return true;
 }
 
 NodeStatus ClothesOutsidePose::tick()
@@ -170,7 +189,8 @@ NodeStatus ClothesOutsidePose::tick()
     }
 
     Eigen::Affine3d transformation;
-    if (clothes_outside_callback(object, scene, transformation) == false)
+    float margin;
+    if (clothes_outside_callback(object, scene, transformation, margin) == false)
     {
         ROS_WARN("ERROR GRASP POINT CALLBACK!");
         return NodeStatus::FAILURE;
@@ -181,10 +201,14 @@ NodeStatus ClothesOutsidePose::tick()
 
     setOutput<geometry_msgs::Pose>("pose_out_msg", pose_msg);
 
+    setOutput<float>("margin_out_msg", margin);
+
     ROS_INFO("PointCloudPose Node:");
     ROS_WARN("Position: %f, %f, %f", pose_msg.position.x, pose_msg.position.y, pose_msg.position.z);
     ROS_WARN("Orientation: %f, %f, %f, %f",
              pose_msg.orientation.x, pose_msg.orientation.y, pose_msg.orientation.z, pose_msg.orientation.w);
+
+    ROS_WARN("Margin available: %f", margin);
 
     return NodeStatus::SUCCESS;
 }
