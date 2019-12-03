@@ -131,7 +131,7 @@ bool clothes_outside_callback(pcl::PointCloud<pcl::PointNormal>::Ptr &object,
     EntropyFilter ef;
     ef.setInputCloud(cloud_seg);
     ef.setDownsampleLeafSize(0.005);     // size of the leaf for downsampling the cloud, value in meters. Default = 5 mm
-    ef.setEntropyThreshold(0.7);         // Segmentation performed for all points with normalized entropy value above this
+    ef.setEntropyThreshold(0.6);         // Segmentation performed for all points with normalized entropy value above this
     ef.setKLocalSearch(500);             // Nearest Neighbour Local Search
     ef.setCurvatureThreshold(0.01);      // Curvature Threshold for the computation of Entropy
     ef.setDepthThreshold(0.03);          // if the segment region has a value of depth lower than this -> not graspable (value in meters)
@@ -149,6 +149,8 @@ bool clothes_outside_callback(pcl::PointCloud<pcl::PointNormal>::Ptr &object,
     }
     //
     pcl::ModelCoefficients::Ptr plane_ef = ef.getReferencePlane();
+
+    
 
     // GRASP POINT --------------------------------------------------------------------------
     PointPose pp;

@@ -92,7 +92,14 @@ NodeStatus MoveArmPreGrasp::tick()
     }
     geometry_msgs::Pose pose = res.value();
 
-    pose.position.z += _offset;
+    auto res2 = getInput<float>("margin_in_msg");
+    if (!res2)
+    {
+        throw RuntimeError("error reading port [margin_in_msg]:", res2.error());
+    }
+    float margin = res2.value();
+
+    pose.position.z += _offset - margin / 2;
 
     bool success = _arm_node->preGraspApproach(pose, _approaching_distance);
     if (!success)
@@ -130,7 +137,17 @@ NodeStatus MoveArmPreRecovery::tick()
     }
     geometry_msgs::Pose pose = res.value();
 
-    pose.position.x -= _offset;
+    auto res2 = getInput<float>("margin_in_msg");
+    if (!res2)
+    {
+        throw RuntimeError("error reading port [margin_in_msg]:", res2.error());
+    }
+    float margin = res2.value();
+
+    pose.position.x -= _offset; // - margin / 2;
+
+    if (margin > 0.02)
+        pose.position.x += 0.02;
 
     bool success = _arm_node->preRecoveryApproach(pose, _distance);
     if (!success)

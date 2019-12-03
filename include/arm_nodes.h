@@ -50,7 +50,8 @@ public:
     static PortsList providedPorts()
     {
         const char *description = "goal pose";
-        return {InputPort<geometry_msgs::Pose>("target", description)};
+        const char *description2 = "margin available";
+        return {InputPort<geometry_msgs::Pose>("target", description), InputPort<float>("margin_in_msg", description2)};
     }
 
 private:
@@ -99,7 +100,8 @@ public:
     static PortsList providedPorts()
     {
         const char *description = "goal pose";
-        return {InputPort<geometry_msgs::Pose>("target", description)};
+        const char *description2 = "margin available";
+        return {InputPort<geometry_msgs::Pose>("target", description), InputPort<float>("margin_in_msg", description2)};
     }
 
 private:

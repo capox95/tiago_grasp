@@ -255,6 +255,9 @@ void ArmControl::removeCollisionObject(moveit_msgs::CollisionObject &object, mov
 
 bool ArmControl::preRecoveryApproach(geometry_msgs::Pose goal, double cartesian_distance)
 {
+    namespace rvt = rviz_visual_tools;
+    moveit_visual_tools::MoveItVisualTools visual_tools("base_footprint");
+    visual_tools.loadRemoteControl();
 
     ROS_WARN("GOAL: %f, %f, %f", goal.position.x, goal.position.y, goal.position.z);
 
@@ -279,6 +282,7 @@ bool ArmControl::preRecoveryApproach(geometry_msgs::Pose goal, double cartesian_
     std::vector<double> joint_values = jtp.positions;
     std::vector<std::string> joint_names = approach.trajectory_.joint_trajectory.joint_names;
 
+    visual_tools.prompt("NEXT FOR CARTESIAN PLAN");
     // -----------------------------------------------------------------------------
 
     moveit_msgs::RobotTrajectory trajectory;
@@ -287,6 +291,8 @@ bool ArmControl::preRecoveryApproach(geometry_msgs::Pose goal, double cartesian_
         return false;
     else
         cartesian.trajectory_ = trajectory;
+
+    visual_tools.prompt("NEXT FOR EXECUTION");
 
     // ------------------------------------------ EXECUTION --------------------------------------------
 
@@ -305,6 +311,10 @@ bool ArmControl::preRecoveryApproach(geometry_msgs::Pose goal, double cartesian_
 
 bool ArmControl::postRecoveryApproach(geometry_msgs::Pose goal, double cartesian_distance)
 {
+    namespace rvt = rviz_visual_tools;
+    moveit_visual_tools::MoveItVisualTools visual_tools("base_footprint");
+    visual_tools.loadRemoteControl();
+
     moveit::planning_interface::MoveGroupInterface::Plan cartesian;
 
     geometry_msgs::Pose current = current_pose_;
@@ -331,6 +341,7 @@ bool ArmControl::postRecoveryApproach(geometry_msgs::Pose goal, double cartesian
     }
 
     cartesian.trajectory_ = trajectory;
+    visual_tools.prompt("NEXT FOR EXECUTION");
 
     // executions --------------------------------------------------------------------------------------------------
 

@@ -20,9 +20,9 @@ static const char *xml_text = R"(
      <BehaviorTree>
             <Sequence>
                 <OpenGripper />
-                <PointCloudPose pose_out_msg="{pose_camera_frame}" />
+                <PointCloudPose pose_out_msg="{pose_camera_frame}" margin_out_msg="{margin_value}" />
                 <TransformFrames pose_in_msg="{pose_camera_frame}" pose_out_msg="{pose_world_frame}" />
-                <MoveArmPreGrasp target="{pose_world_frame}" />
+                <MoveArmPreGrasp target="{pose_world_frame}" margin_in_msg="{margin_value}" />
                 <CloseGripper />
                 <MoveArmPostGrasp />
             </Sequence>
@@ -38,9 +38,6 @@ int main(int argc, char **argv)
     spinner.start();
 
     std::shared_ptr<ArmControl> ptr_arm = std::allocate_shared<ArmControl>(Eigen::aligned_allocator<ArmControl>());
-
-    //std::shared_ptr<ArmControl> ptr_arm2 = std::make_shared<ArmControl>(
-    //    "arm_torso", "kdl_kinematics_plugin/KDLKinematicsPlugin", "base_link", "arm_tool_link");
 
     std::shared_ptr<GripperControl> ptr_gripper = std::make_shared<GripperControl>();
 
@@ -62,7 +59,7 @@ int main(int argc, char **argv)
     std::string target_frame = "base_footprint";
     std::string source_frame = "xtion_rgb_optical_frame";
 
-    float offset_gripper_tf = 0.19; //offset between tip of gripper fingers and ee-effector frame ("arm_tool_link") = 0.22 m
+    float offset_gripper_tf = 0.22; //offset between tip of gripper fingers and ee-effector frame ("arm_tool_link") = 0.22 m
     float distance = 0.3;           // distance travelled vertically (approach and departure)
 
     float sleep = 0.1;

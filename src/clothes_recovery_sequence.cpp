@@ -20,12 +20,12 @@ static const char *xml_text = R"(
      <BehaviorTree>
             <Sequence>
                 <OpenGripper/>
-                <ClothesOutsidePose pose_out_msg="{pose_camera_frame}" />
+                <ClothesOutsidePose pose_out_msg="{pose_camera_frame}" margin_out_msg="{margin_value}" />
                 <TransformFrames pose_in_msg="{pose_camera_frame}" pose_out_msg="{pose_world_frame}" />
-                <MoveArmPreRecovery target="{pose_world_frame}" />
+                <MoveArmPreRecovery target="{pose_world_frame}" margin_in_msg="{margin_value}" />
                 <CloseGripper />
-                <MoveArmPostRecovery />
-                <OpenGripper/>
+                <MoveArmPostRecovery />  
+                <OpenGripper/>              
             </Sequence>
      </BehaviorTree>
  </root>
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
     std::string target_frame = "base_footprint";
     std::string source_frame = "xtion_rgb_optical_frame";
 
-    float offset_gripper_tf = 0.25; //offset between tip of gripper fingers and ee-effector frame ("arm_tool_link") = 0.22 m
+    float offset_gripper_tf = 0.28; // 0.25 //offset between tip of gripper fingers and ee-effector frame ("arm_tool_link") = 0.22 m
     float distance = 0.15;          // distance travelled vertically (approach and departure)
 
     for (auto &node : tree.nodes)
