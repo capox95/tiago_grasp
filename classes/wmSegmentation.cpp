@@ -1,4 +1,4 @@
-#include "../include/alignTarget.h"
+#include "../include/wmSegmentation.h"
 
 void Processing::setSceneCloud(PointCloudT::Ptr scene) { scene_ = scene; }
 

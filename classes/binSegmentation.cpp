@@ -22,7 +22,7 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/segmentation/extract_clusters.h>
 
-#include "../include/binsegmentation.h"
+#include "../include/binSegmentation.h"
 
 void BinSegmentation::setInputCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud) { m_source = cloud; }
 

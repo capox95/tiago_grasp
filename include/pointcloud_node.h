@@ -10,9 +10,9 @@
 #include <eigen_conversions/eigen_msg.h>
 
 #include "../include/entropyOut.h"
-#include "../include/binsegmentation.h"
+#include "../include/binSegmentation.h"
 #include "../include/pointposeOut.h"
-#include "../include/alignTarget.h"
+#include "../include/wmSegmentation.h"
 #include "../include/findTarget.h"
 
 #include <behaviortree_cpp/behavior_tree.h>
